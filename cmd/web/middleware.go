@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -79,4 +80,42 @@ func noSurf(next http.Handler) http.Handler {
 	})
 
 	return csrfHandler
+}
+
+type contextKey string
+
+const isAuthenticatedContextKey = contextKey("isAuthenticated")
+
+func (app *application) authenticate(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Retrieve the authenticatedUserID value from the session using the
+		// GetInt() method. This will return the value for an int (0) if no
+		// "authentiicatedUserID" value is in the session -- in which case
+		// the next handler in the chain is called as normal and return.
+		id := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+		if id == 0 {
+			next.ServeHTTP(w, r)
+			return
+		}
+		// Otherwise check to see if a user with that ID exists in the database
+		exists, err := app.users.Exists(id)
+		if err != nil {
+			app.serverError(w, err)
+			return
+		}
+		// If a matching user is found, we know that the request is coming from
+		// an authenticated use who exists in the database. Create a copy of the
+		// request (with an isAuthenticatedContextKey value of true in the request
+		// context) and assign it to r.
+		if exists {
+			ctx := context.WithValue(r.Context(), isAuthenticatedContextKey, true)
+			r = r.WithContext(ctx)
+		}
+		// If we don't have a valid authenticated user, the original and unchanged
+		// *http.Request is passed to the next handler in the chain. When we do
+		// have a valid authenticated user, the copy of the request with
+		// `isAuthenticatedContextKey` key and `true` value is stored in the request
+		// context.
+		next.ServeHTTP(w, r)
+	})
 }
