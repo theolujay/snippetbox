@@ -1,0 +1,19 @@
+{{define "title"}}Snippet #{{.Snippet.ID}}{{end}}
+
+{{define "main"}}
+    {{with .Snippet}}
+    <div class='snippet'>
+        <div class='metadata'>
+            <strong>{{.Title}}</strong>
+            <span>#{{.ID}}</span>
+        </div>
+        <pre><code>{{.Content}}</code></pre>
+        <div class='metadata'>
+            <!-- Using custom template function (humanDate) -->
+            <time>Created: {{humanDate .Created}}</time>
+            <!-- Alternatively, we can pipe values. It's the same as above -->
+            <time>{{.Expires | humanDate | printf "Expires: %s"}}</time>
+        </div>
+    </div>
+    {{end}}
+{{end}}
