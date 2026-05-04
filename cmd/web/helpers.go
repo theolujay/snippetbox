@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/go-playground/form/v4"
+	"github.com/justinas/nosurf"
 )
 
 type neuteredFileSystem struct {
@@ -114,7 +115,9 @@ func (app *application) newTemplateData(r *http.Request) *templateData {
 		// PopString() retrives the value for the "flash" key and then deletes
 		// the key and value from the session data. It's like a one-time fetch
 		// in this use case. It returns an empty string if key doesn't exist.
-		Flash: app.sessionManager.PopString(r.Context(), "flash"),
+		Flash:           app.sessionManager.PopString(r.Context(), "flash"),
+		IsAuthenticated: app.isAuthenticated(r),
+		CSRFToken:       nosurf.Token(r),
 	}
 }
 
@@ -136,4 +139,9 @@ func (app *application) decodePostForm(r *http.Request, dst any) error {
 	}
 
 	return nil
+}
+
+// Return true if the current request is from an authenticated user
+func (app *application) isAuthenticated(r *http.Request) bool {
+	return app.sessionManager.Exists(r.Context(), "authenticatedUserID")
 }

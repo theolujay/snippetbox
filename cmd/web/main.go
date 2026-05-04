@@ -58,6 +58,20 @@ func main() {
 	// over unsecure HTTP connection)
 	sessionManager.Cookie.Secure = true
 
+	// `http.SameSiteStrictMode`` blocks the session cookie from being sent by the user's browser
+	// for all cross-site usage, including safe requests with HTTP methods
+	// like GET and HEAD. While it might sound even safer -- and it is --
+	// the downsid eis that the session cookie won't be sent when a user
+	// clicks on a link to this application from another website. This in
+	// turn means that your application would initially treat the user as
+	// 'not logged in' even if they have an active session containing their
+	// "authenticatedUserID" value. SameSite = Lax is generally more appropriate.
+	// NOTE: Concerning SameSite cookies, there's no browser that exists which supports TLS 1.3
+	// and does not support SameSite cookies, so making TLS 1.3 the minimum supported version in
+	// TLSConfig for the server means all browsers able to use the application will support
+	// SameSite cookies; this would mean using justinas/norsurf package would no longer be necessary.
+	sessionManager.Cookie.SameSite = http.SameSiteLaxMode
+
 	app := &application{
 		errorLog:       errorLog,
 		infoLog:        infoLog,
@@ -81,9 +95,9 @@ func main() {
 		},
 		// Min and max TLS versions can be configured, especially in situations
 		// where one knows that certain computers to be used support a specific
-		// version -- say TLS 1.2
-		MinVersion: tls.VersionTLS12,
-		MaxVersion: tls.VersionTLS12,
+		// version -- say TLS 1.2.
+		MinVersion: tls.VersionTLS13,
+		MaxVersion: tls.VersionTLS13,
 		// For some applications, it may be desirable to limit the HTTPS
 		// server to only support some of these cipher suites. For example, it
 		// might be desirable to only support cipher suites which use ECDHE
