@@ -5,6 +5,8 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/justinas/alice"
+
+	"github.com/theolujay/snippetbox/ui"
 )
 
 func (app *application) routes() http.Handler {
@@ -17,9 +19,12 @@ func (app *application) routes() http.Handler {
 	router.MethodNotAllowed = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		app.clientError(w, http.StatusMethodNotAllowed)
 	})
-
-	fileServer := http.FileServer(http.Dir("./ui/static/"))
-	router.Handler(http.MethodGet, "/static/*filepath", http.StripPrefix("/static", fileServer))
+	// Convert the ui.Files into https.FS type so it satisfies the http.FileSystem interface.
+	fileServer := http.FileServer(http.FS(ui.Files))
+	// Since the static files are contained in the "static" folder of the ui.Files embedded
+	// filesystem, there's no need to strip the prefix from the request URL -->
+	// http.StripPrefix("/static", fileServer)
+	router.Handler(http.MethodGet, "/static/*filepath", fileServer)
 
 	dynamic := alice.New(app.sessionManager.LoadAndSave, noSurf, app.authenticate)
 
