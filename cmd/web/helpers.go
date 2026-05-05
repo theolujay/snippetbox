@@ -124,7 +124,11 @@ func (app *application) newTemplateData(r *http.Request) *templateData {
 func (app *application) decodePostForm(r *http.Request, dst any) error {
 	err := r.ParseForm()
 	if err != nil {
-		err = app.formDecoder.Decode(dst, r.PostForm)
+		return err
+	}
+
+	err = app.formDecoder.Decode(dst, r.PostForm)
+	if err != nil {
 		// If we try to use an invalid target destination, the Decode() will return
 		// an error with the type *form.InvalidDecoderError. Use errors.As() to
 		// check for this and raise a panic rather than returning the error

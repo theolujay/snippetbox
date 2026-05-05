@@ -88,13 +88,6 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	// Call the Decode() method, passing in the current request and a pointer to the
-	// snippetCreateForm struct. This will essentially fill the struct with the
-	// relevant values from the HTML form.
-	if err = app.formDecoder.Decode(&form, r.PostForm); err != nil {
-		app.clientError(w, http.StatusBadRequest)
-	}
-
 	form.Checkfield(
 		validator.NotBlank(form.Title),
 		"title", "This field cannot be blank",
@@ -158,9 +151,6 @@ func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
 		return
-	}
-	if err = app.formDecoder.Decode(&form, r.PostForm); err != nil {
-		app.clientError(w, http.StatusBadRequest)
 	}
 
 	form.Checkfield(
@@ -230,9 +220,6 @@ func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
 		return
-	}
-	if err = app.formDecoder.Decode(&form, r.PostForm); err != nil {
-		app.clientError(w, http.StatusBadRequest)
 	}
 
 	form.Checkfield(
