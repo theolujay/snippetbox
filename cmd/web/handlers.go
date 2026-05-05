@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+
 	// "path/filepath"
 	"strconv"
 
@@ -109,7 +110,7 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 		"This field cannot be blank",
 	)
 	form.Checkfield(
-		validator.PermittedInt(form.Expires, 1, 7, 365),
+		validator.PermittedValue(form.Expires, 1, 7, 365),
 		"expires",
 		"This field must equal 1, 7 or 365",
 	)
