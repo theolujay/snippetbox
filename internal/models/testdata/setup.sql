@@ -21,6 +21,7 @@ ALTER TABLE users ADD CONSTRAINT users_uc_email UNIQUE (email);
 INSERT INTO users (name, email, hashed_password, created) VALUES (
     'Alice Jones',
     'alice@example.com',
+    -- hashed_password = pa$$word
     '$2a$12$NuTjWXm3KKntReFwyBVHyuf/to.HEwTy.eS206TNfkGfr6HzGJSWG',
     '2022-01-01 10:00:00'
 );

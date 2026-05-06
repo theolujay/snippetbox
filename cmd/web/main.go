@@ -18,7 +18,7 @@ import (
 )
 
 type application struct {
-	debug		   bool
+	debug          bool
 	errorLog       *log.Logger
 	infoLog        *log.Logger
 	snippets       models.SnippetModelInterface
@@ -75,7 +75,7 @@ func main() {
 	sessionManager.Cookie.SameSite = http.SameSiteLaxMode
 
 	app := &application{
-		debug:			*debug,
+		debug:          *debug,
 		errorLog:       errorLog,
 		infoLog:        infoLog,
 		snippets:       &models.SnippetModel{DB: db},

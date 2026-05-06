@@ -199,3 +199,57 @@ func TestUserSignup(t *testing.T) {
 	}
 
 }
+
+func TestSnippetCreate(t *testing.T) {
+	app := newTestApplication(t)
+	ts := newTestServer(t, app.routes())
+	defer ts.Close()
+
+	tests := []struct {
+		name         string
+		wantCode     int
+		wantLocation string
+		userEmail    string
+		userPassword string
+		login        bool
+	}{
+		{
+			name:         "Unauthenticated",
+			wantCode:     http.StatusSeeOther,
+			wantLocation: "/user/login",
+		},
+		{
+			name:         "Authenticated",
+			wantCode:     http.StatusSeeOther,
+			wantLocation: "",
+			userEmail:    "alice@example.com",
+			userPassword: "pa$$word",
+			login:        true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var (
+				code   int
+				header http.Header
+				body   string
+			)
+			if tt.login {
+				code, _, body = ts.get(t, "/user/login")
+				assert.Equal(t, code, http.StatusOK)
+				csrfToken := extractCSRFToken(t, body)
+				form := url.Values{}
+				form.Add("email", tt.userEmail)
+				form.Add("password", tt.userPassword)
+				form.Add("csrf_token", csrfToken)
+				code, header, body = ts.postForm(t, "/user/login", form)
+
+			} else {
+				code, header, body = ts.get(t, "/snippet/create")
+			}
+			assert.Equal(t, code, tt.wantCode)
+			assert.StringContains(t, header.Get("Location"), tt.wantLocation)
+		})
+	}
+}
