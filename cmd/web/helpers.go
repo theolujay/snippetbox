@@ -65,9 +65,11 @@ func (app *application) serverError(w http.ResponseWriter, err error) {
 	// Output helps
 	app.errorLog.Output(2, trace)
 
-	http.Error(w, http.StatusText(
-		http.StatusInternalServerError), http.StatusInternalServerError,
-	)
+	if app.debug {
+		http.Error(w, trace, http.StatusInternalServerError)
+		return
+	}
+	http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 }
 
 // clientError helper sends a specific status code and corresponding description
