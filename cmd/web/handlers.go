@@ -298,8 +298,14 @@ func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, err)
 		return
 	}
-	app.sessionManager.Put(r.Context(), "flash", "Login successful!")
+	// app.sessionManager.Put(r.Context(), "flash", "Login successful!")
 	app.sessionManager.Put(r.Context(), "authenticatedUserID", id)
+
+	path := app.sessionManager.PopString(r.Context(), "redirectPathAfterLogin")
+	if path != "" {
+		http.Redirect(w, r, path, http.StatusSeeOther)
+		return
+	}
 
 	http.Redirect(w, r, "/snippet/create", http.StatusSeeOther)
 }
