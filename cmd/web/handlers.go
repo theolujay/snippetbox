@@ -32,6 +32,23 @@ func (app *application) about(w http.ResponseWriter, r *http.Request) {
 	app.render(w, http.StatusOK, "about.tmpl", data)
 }
 
+func (app *application) accountView(w http.ResponseWriter, r *http.Request) {
+	id := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+	user, err := app.users.Get(id)
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			app.notFound(w)
+		} else {
+			app.serverError(w, err)
+		}
+		return
+	}
+	data := app.newTemplateData(r)
+	data.User = user
+
+	app.render(w, http.StatusOK, "account.tmpl", data)
+}
+
 func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 	// httprouter stores values of named parameters in the request context when
 	// parsing the request
