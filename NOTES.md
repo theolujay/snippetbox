@@ -182,7 +182,11 @@
             "Alice", "alice@example.com")
         ```
 
-    NOTE: Always remember to `defer Close()` on database connections, else it'll all be used up.
+    NOTE:
+    - Always remember to `defer Close()` on database connections, else it'll all be used up.
+    - Also, always check `rows.Err()` after the `rows.Next()` loop to catch any errors that occurred during iteration.
+    - MySQL Error Handling: Use `errors.As()` with `*mysql.MySQLError` to check for specific MySQL error numbers (like 1062 for duplicate entries).
+
 
 - `%+v` in something like `fmt.FPrintf(w, "%+v\n", s)` prints struct field names alongside values
 
@@ -255,6 +259,17 @@
     ```plaintext
     logRequest <----> secureHeaders <---->  app handler <----> servemux
     ```
+- Authentication & Cache:
+    - Use `context.WithValue` to pass authentication status through the middleware chain.
+    - Set `Cache-Control: no-store` for authenticated pages to prevent browsers or intermediaries from storing sensitive content in their cache.
+- Form Decoding:
+    - Use struct tags (e.g. `form:"title"`) to tell `form.Decoder` how to map HTML form values into struct fields.
+    - `form:"-"` tells the decoder to completely ignore a field during decoding.
+- Session Security:
+    - `Secure: true` flag ensures cookies are only sent over HTTPS connections.
+    - `SameSite` attribute:
+        - `Strict`: Blocks session cookies for all cross-site usage.
+        - `Lax`: Allows session cookies to be sent when a user clicks a link from another site. Generally more appropriate for standard web apps.
 - On recovering panic, `Connection: close` acts as a trigger to make Go's HTTP server automatically close the current connection after a response has been sent. If it's an HTTP/2 connection, Go strips the the `Connection: close` header from the response (so it is not malformed) and rather sends a `GOAWAY` frame.
     <details>
     <summary>What's a GOAWAY frame?</summary>
@@ -268,8 +283,19 @@
 - Configuring HTTPS setting:
     - `Connection: keep-alive` is used to allow clients use the same TCP connection instead of a new one with every request/response cycle. This reduces the number of "hops" and generally improves performance.
     - A `keep-alive` connection is automatically closed after a couple of minutes (with the exact time depending on the OS). And there is no way o increase this -- although it can be reduced -- without rolling out a new `net.Listener`.
+    - TLS curve preferences: Restricting to assembly-backed curves (like X25519 and P-256) keeps handshake cost low under heavy load.
+    - TLS 1.3: All cipher suites supported by Go for TLS 1.3 are considered safe, so any custom `CipherSuites` in `tls.Config` are ignored for TLS 1.3 connections.
+    - Server timeouts: Use `IdleTimeout`, `ReadTimeout`, and `WriteTimeout` to prevent resource exhaustion. `ReadHeaderTimeout` is particularly useful for mitigating Slowloris attacks.
+    <details>
+    <summary>What's a Slowloris attack?</summary>
+        Slowloris is a <a href="https://www.cloudflare.com/learning/ddos/glossary/denial-of-service/">denial-of-service</a> attack program which allows an attacker to overwhelm a targeted server by opening and maintaining many simultaneous HTTP connections between the attacker and the target. Read more <a href="https://www.cloudflare.com/learning/ddos/ddos-attack-tools/slowloris/">here</a>
+    </details>
 - File embeddings allow for one to bundle templates -- UI assets -- into the binary output, removing the need for a filesystem.
-
+- Router named parameters:
+    - `httprouter` stores values of named parameters (like `:id`) in the request context, accessible via `httprouter.ParamsFromContext(r.Context())`.
+- Template nuances:
+    - Custom template functions must return only one value (or one value and an error).
+    - Use `ParseFS()` to parse templates directly from an embedded filesystem.
     <details>
     <summary>Implementation (from <a href="./ui/efs.go">ui/efs.go</a>)</summary>
 
@@ -317,6 +343,8 @@
     2. `cert.pem` — self-signed TLS certificate containing public key
 
     Both are PEM-encoded (standard format for TLS implementations)
+
+---
 
 ### Testing
 
