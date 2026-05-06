@@ -325,6 +325,77 @@ func (app *application) userLogoutPost(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
+type accountPasswordUpdateForm struct {
+	CurrentPassword         string `form:"currentPassword"`
+	NewPassword             string `form:"newPassword"`
+	NewPasswordConfirmation string `form:"newPasswordConfirmation"`
+	validator.Validator     `form:"-"`
+}
+
+func (app *application) accountPasswordUpdate(w http.ResponseWriter, r *http.Request) {
+	data := app.newTemplateData(r)
+	data.Form = accountPasswordUpdateForm{}
+	app.render(w, http.StatusOK, "password.tmpl", data)
+}
+
+func (app *application) accountPasswordUpdatePost(w http.ResponseWriter, r *http.Request) {
+	var form accountPasswordUpdateForm
+
+	err := app.decodePostForm(r, &form)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	form.Checkfield(
+		validator.NotBlank(form.CurrentPassword),
+		"currentPassword", "This field cannot be blank",
+	)
+	form.Checkfield(
+		validator.NotBlank(form.NewPassword),
+		"newPassword",
+		"This field cannot be blank",
+	)
+	form.Checkfield(
+		validator.NotBlank(form.NewPasswordConfirmation),
+		"newPasswordConfirmation",
+		"This field cannot be blank",
+	)
+	form.Checkfield(
+		validator.MinChars(form.NewPassword, 8),
+		"password",
+		"This field must be at least 8 characters",
+	)
+	form.Checkfield(
+		form.NewPassword == form.NewPasswordConfirmation,
+		"newPasswordConfirmation",
+		"Doesn't match. Please try again",
+	)
+
+	if !form.Valid() {
+		data := app.newTemplateData(r)
+		data.Form = form
+		app.render(w, http.StatusUnprocessableEntity, "password.tmpl", data)
+		return
+	}
+	id := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+	err = app.users.PasswordUpdate(id, form.CurrentPassword, form.NewPassword)
+	if err != nil {
+		if errors.Is(err, models.ErrInvalidCredentials) {
+			form.AddFieldError("currentPassword", "Incorrect password")
+			data := app.newTemplateData(r)
+			data.Form = form
+			app.render(w, http.StatusUnprocessableEntity, "password.tmpl", data)
+		} else {
+			app.serverError(w, err)
+		}
+		return
+	}
+	app.sessionManager.Put(r.Context(), "flash", "Password update successful!")
+
+	http.Redirect(w, r, "/account/view", http.StatusSeeOther)
+}
+
 func ping(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("OK"))
 }

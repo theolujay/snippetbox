@@ -44,3 +44,7 @@ func (m *UserModel) Exists(id int) (bool, error) {
 func (m *UserModel) Get(id int) (*models.User, error) {
 	return mockUser, nil
 }
+
+func (m *UserModel) PasswordUpdate(id int, currentPassword, newPassword string) error {
+	return nil
+}
