@@ -9,6 +9,7 @@ git clone https://github.com/theolujay/snippetbox
 cd snippetbox
 go run ./cmd/web
 ```
+Visit https://localhost:4000 in your browser
 
 ### ...
 
