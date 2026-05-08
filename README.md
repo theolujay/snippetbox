@@ -13,8 +13,4 @@ Visit https://localhost:4000 in your browser
 
 ### ...
 
-It took about seven days to complete the book (I think), and I found it very resourceful and the perfect guide on learning Go by doing. All of my notes from the journey through the book can be found in [NOTES.md](NOTES.md) if you're interested, although it's primarly for me to come back to when needed. And if curious, my current active reading list (at this time) includes the following:
-- Let's Go Further by Alex Edwards
-- Learning Go by Jon Bodner
-- Designing Data Intensive Application by Martin Kleppman
-- The Missing README by Chris Riccomini and Dmitriy Ryaboy
+It took about seven days to complete the book (I think), and I found it very resourceful and the perfect guide on learning Go by doing. All of my notes from the journey through the book can be found in [NOTES.md](NOTES.md) if you're interested, although it's primarly for me to come back to when needed.
